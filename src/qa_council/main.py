@@ -83,9 +83,37 @@ def _dry_run(args):
 
 
 def _run(args):
-    """Run the Scout + Critic debate crew."""
-    from crewai import Crew, Process
+    """Run the QA council."""
+    print(f"\n🚀 QA-Council — Mode: {args.mode.upper()}")
+    print(f"   Target: {args.url}")
+    print(f"   Model:  {args.model}")
+    print(f"   Output: {args.output}")
+    print("=" * 60)
 
+    if args.mode == "new":
+        _run_full_council(args)
+    else:
+        _run_scout_critic(args)
+
+
+def _run_full_council(args):
+    """Run the full 6-agent council (NEW mode)."""
+    from qa_council.crews.new_crew import build_new_crew
+
+    crew = build_new_crew(
+        target_url=args.url,
+        output_dir=args.output,
+        llm=args.model,
+    )
+
+    print("\n🏛️  Full council is in session (6 agents, 9 tasks)...\n")
+    result = crew.kickoff()
+    _save_result(result, args.output, "council_report.md")
+
+
+def _run_scout_critic(args):
+    """Run the lightweight Scout + Critic debate (EXTEND/MAINTAIN mode)."""
+    from crewai import Crew, Process
     from qa_council.agents.scout import create_scout
     from qa_council.agents.critic import create_critic
     from qa_council.tasks.recon import (
@@ -95,25 +123,14 @@ def _run(args):
     )
     from qa_council.tools.http_client import HttpClientTool
 
-    print(f"\n🚀 QA-Council — Mode: {args.mode.upper()}")
-    print(f"   Target: {args.url}")
-    print(f"   Model:  {args.model}")
-    print(f"   Output: {args.output}")
-    print("=" * 60)
-
-    # Create tools
     http_tool = HttpClientTool()
-
-    # Create agents from SKILL.md files
     scout = create_scout(llm=args.model, tools=[http_tool])
     critic = create_critic(llm=args.model)
 
-    # Create the debate tasks
     explore_task = create_explore_task(scout, args.url)
     critique_task = create_critique_recon_task(critic, explore_task)
     revised_task = create_revised_explore_task(scout, explore_task, critique_task)
 
-    # Assemble the crew
     crew = Crew(
         agents=[scout, critic],
         tasks=[explore_task, critique_task, revised_task],
@@ -121,22 +138,23 @@ def _run(args):
         verbose=True,
     )
 
-    # Run the council
-    print("\n🏛️  Council is in session...\n")
+    print("\n🔍 Scout + Critic debate in session...\n")
     result = crew.kickoff()
+    _save_result(result, args.output, "api_map.md")
 
-    # Save output
-    output_dir = Path(args.output)
-    output_dir.mkdir(parents=True, exist_ok=True)
 
-    output_file = output_dir / "api_map.md"
+def _save_result(result, output_dir: str, filename: str):
+    """Save crew result to file and print summary."""
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    output_file = output_path / filename
     output_file.write_text(str(result.raw), encoding="utf-8")
 
     print("\n" + "=" * 60)
     print(f"✅ Council session complete!")
     print(f"   Output saved to: {output_file}")
 
-    # Print usage metrics if available
     if hasattr(result, "token_usage"):
         usage = result.token_usage
         print(f"\n📊 Token Usage:")
