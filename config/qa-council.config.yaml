@@ -1,0 +1,27 @@
+# QA-Council Configuration
+# See PRD.md §6 for checkpoint options, §8 for model presets.
+
+checkpoints: critical # none | phase | critical | full
+
+models:
+  default: "gpt-4o-mini"
+
+  per_agent:
+    scout: "gpt-4o-mini"
+    strategist: "gpt-4o-mini"
+    engineer: "gpt-4o-mini"
+    critic: "gpt-4o-mini"
+    reporter: "gpt-4o-mini"
+    moderator: "gpt-4o-mini"
+
+presets:
+  budget:
+    default: "gpt-4o-mini"
+  balanced:
+    default: "claude-sonnet-4-20250514"
+    per_agent:
+      scout: "gpt-4o-mini"
+      reporter: "gpt-4o-mini"
+      moderator: "gpt-4o-mini"
+  premium:
+    default: "claude-sonnet-4-20250514"
