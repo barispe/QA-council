@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 
 def main():
     """CLI entry point for qa-council."""
-    # Load .env file for API keys
     load_dotenv()
 
     parser = argparse.ArgumentParser(
@@ -29,7 +28,7 @@ def main():
         default="new",
         help="Operating mode (default: new)",
     )
-    run_parser.add_argument("--output", default="./output", help="Output directory (default: ./output)")
+    run_parser.add_argument("--output", default="./output", help="Output directory")
     run_parser.add_argument(
         "--preset",
         choices=["budget", "balanced", "premium"],
@@ -42,16 +41,8 @@ def main():
         help="Checkpoint level (default: critical)",
     )
     run_parser.add_argument("--config", help="Path to config YAML file")
-    run_parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what agents would activate without making LLM calls",
-    )
-    run_parser.add_argument(
-        "--model",
-        default="gpt-4o-mini",
-        help="LLM model to use for all agents (default: gpt-4o-mini)",
-    )
+    run_parser.add_argument("--dry-run", action="store_true", help="Preview without LLM calls")
+    run_parser.add_argument("--model", default=None, help="LLM model override for all agents")
 
     args = parser.parse_args()
 
@@ -68,79 +59,93 @@ def main():
 
 def _dry_run(args):
     """Show what agents would activate without making LLM calls."""
+    from qa_council.config import load_config
+
+    config = load_config(config_path=args.config, args=args)
+
     mode_agents = {
         "new": ["Moderator", "Scout", "Strategist", "Engineer", "Critic", "Reporter"],
-        "extend": ["Moderator", "Scout (new areas)", "Strategist", "Engineer", "Critic", "Reporter"],
-        "maintain": ["Moderator", "Scout (changed areas)", "Engineer", "Critic"],
+        "extend": ["Moderator", "Scout", "Strategist", "Engineer", "Critic", "Reporter"],
+        "maintain": ["Scout", "Engineer", "Critic"],
     }
-    agents = mode_agents[args.mode]
-    print(f"\n🔍 Dry Run — Mode: {args.mode.upper()}")
-    print(f"   Target: {args.url}")
-    print(f"   Output: {args.output}")
-    print(f"   Checkpoints: {args.checkpoints}")
+    agents = mode_agents[config.mode]
+
+    print(f"\n🔍 Dry Run — Mode: {config.mode.upper()}")
+    print(f"   Target: {config.url}")
+    print(f"   Output: {config.output}")
+    print(f"   Checkpoints: {config.checkpoints}")
+    print(f"   Model (default): {config.models.default}")
+
+    # Show per-agent models if any differ from default
+    overrides = {k: v for k, v in config.models.per_agent.items() if v != config.models.default}
+    if overrides:
+        print(f"   Model overrides: {overrides}")
+
     print(f"\n   Would activate: {', '.join(agents)}")
     print(f"   Total agents: {len(agents)}\n")
 
 
 def _run(args):
     """Run the QA council."""
-    print(f"\n🚀 QA-Council — Mode: {args.mode.upper()}")
-    print(f"   Target: {args.url}")
-    print(f"   Model:  {args.model}")
-    print(f"   Output: {args.output}")
+    from qa_council.config import load_config
+
+    config = load_config(config_path=args.config, args=args)
+
+    print(f"\n🚀 QA-Council — Mode: {config.mode.upper()}")
+    print(f"   Target: {config.url}")
+    print(f"   Model:  {config.models.default}")
+    print(f"   Output: {config.output}")
+    print(f"   Checkpoints: {config.checkpoints}")
     print("=" * 60)
 
-    if args.mode == "new":
-        _run_full_council(args)
+    if config.mode == "new":
+        _run_full_council(config)
+    elif config.mode == "extend":
+        _run_extend(config)
     else:
-        _run_scout_critic(args)
+        _run_maintain(config)
 
 
-def _run_full_council(args):
+def _run_full_council(config):
     """Run the full 6-agent council (NEW mode)."""
     from qa_council.crews.new_crew import build_new_crew
 
     crew = build_new_crew(
-        target_url=args.url,
-        output_dir=args.output,
-        llm=args.model,
+        target_url=config.url,
+        output_dir=config.output,
+        llm=config.models.default,
     )
-
     print("\n🏛️  Full council is in session (6 agents, 9 tasks)...\n")
     result = crew.kickoff()
-    _save_result(result, args.output, "council_report.md")
+    _save_result(result, config.output, "council_report.md")
 
 
-def _run_scout_critic(args):
-    """Run the lightweight Scout + Critic debate (EXTEND/MAINTAIN mode)."""
-    from crewai import Crew, Process
-    from qa_council.agents.scout import create_scout
-    from qa_council.agents.critic import create_critic
-    from qa_council.tasks.recon import (
-        create_explore_task,
-        create_critique_recon_task,
-        create_revised_explore_task,
+def _run_extend(config):
+    """Run the EXTEND mode crew."""
+    from qa_council.crews.extend_crew import build_extend_crew
+
+    crew = build_extend_crew(
+        target_url=config.url,
+        output_dir=config.output,
+        llm=config.models.default,
     )
-    from qa_council.tools.http_client import HttpClientTool
-
-    http_tool = HttpClientTool()
-    scout = create_scout(llm=args.model, tools=[http_tool])
-    critic = create_critic(llm=args.model)
-
-    explore_task = create_explore_task(scout, args.url)
-    critique_task = create_critique_recon_task(critic, explore_task)
-    revised_task = create_revised_explore_task(scout, explore_task, critique_task)
-
-    crew = Crew(
-        agents=[scout, critic],
-        tasks=[explore_task, critique_task, revised_task],
-        process=Process.sequential,
-        verbose=True,
-    )
-
-    print("\n🔍 Scout + Critic debate in session...\n")
+    print("\n📦 Extend mode — adding tests to existing coverage...\n")
     result = crew.kickoff()
-    _save_result(result, args.output, "api_map.md")
+    _save_result(result, config.output, "extend_report.md")
+
+
+def _run_maintain(config):
+    """Run the MAINTAIN mode crew."""
+    from qa_council.crews.maintain_crew import build_maintain_crew
+
+    crew = build_maintain_crew(
+        target_url=config.url,
+        output_dir=config.output,
+        llm=config.models.default,
+    )
+    print("\n🔧 Maintain mode — fixing and updating tests...\n")
+    result = crew.kickoff()
+    _save_result(result, config.output, "maintain_report.md")
 
 
 def _save_result(result, output_dir: str, filename: str):
