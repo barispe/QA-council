@@ -157,12 +157,12 @@ def _save_result(result, output_dir: str, filename: str):
     output_file.write_text(str(result.raw), encoding="utf-8")
 
     print("\n" + "=" * 60)
-    print(f"✅ Council session complete!")
+    print("✅ Council session complete!")
     print(f"   Output saved to: {output_file}")
 
     if hasattr(result, "token_usage"):
         usage = result.token_usage
-        print(f"\n📊 Token Usage:")
+        print("\n📊 Token Usage:")
         print(f"   Total tokens: {usage.total_tokens}")
         print(f"   Prompt tokens: {usage.prompt_tokens}")
         print(f"   Completion tokens: {usage.completion_tokens}")

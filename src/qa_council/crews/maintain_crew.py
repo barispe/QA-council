@@ -19,7 +19,9 @@ from qa_council.tools.file_writer import FileWriterTool
 from qa_council.tools.test_runner import TestRunnerTool
 
 
-def build_maintain_crew(target_url: str, output_dir: str = "./output", llm: str = "gpt-4o-mini") -> Crew:
+def build_maintain_crew(
+    target_url: str, output_dir: str = "./output", llm: str = "gpt-4o-mini"
+) -> Crew:
     """Build a crew for MAINTAIN mode — fixing and updating existing tests.
 
     Lightweight pipeline with only Scout, Engineer, and Critic.
@@ -53,8 +55,11 @@ def build_maintain_crew(target_url: str, output_dir: str = "./output", llm: str 
     return Crew(
         agents=[scout, engineer, critic],
         tasks=[
-            explore_task, critique_recon, revised_recon,
-            implement_task, critique_code,
+            explore_task,
+            critique_recon,
+            revised_recon,
+            implement_task,
+            critique_code,
         ],
         process=Process.sequential,
         verbose=True,

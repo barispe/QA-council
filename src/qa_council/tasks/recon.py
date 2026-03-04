@@ -72,9 +72,7 @@ def create_critique_recon_task(critic: Agent, explore_task: Task) -> Task:
     )
 
 
-def create_revised_explore_task(
-    scout: Agent, explore_task: Task, critique_task: Task
-) -> Task:
+def create_revised_explore_task(scout: Agent, explore_task: Task, critique_task: Task) -> Task:
     """Create the revision task where the Scout addresses the Critic's feedback.
 
     The Scout receives both its original findings and the Critic's challenges,

@@ -48,9 +48,7 @@ def create_critique_code_task(critic: Agent, implement_task: Task) -> Task:
     )
 
 
-def create_fix_tests_task(
-    engineer: Agent, implement_task: Task, critique_task: Task
-) -> Task:
+def create_fix_tests_task(engineer: Agent, implement_task: Task, critique_task: Task) -> Task:
     """Create the task where the Engineer fixes issues from the code review."""
     return Task(
         description=(

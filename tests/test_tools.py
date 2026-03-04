@@ -38,12 +38,18 @@ class TestHttpClientTool:
         mock_response.text = '{"id": 1}'
         mock_response.headers = {"content-type": "application/json"}
 
-        with patch("qa_council.tools.http_client.httpx.request", return_value=mock_response) as mock_req:
-            result = http_tool._run(json.dumps({
-                "method": "POST",
-                "url": "https://api.example.com/pets",
-                "body": {"name": "Rex", "status": "available"},
-            }))
+        with patch(
+            "qa_council.tools.http_client.httpx.request", return_value=mock_response
+        ) as mock_req:
+            result = http_tool._run(
+                json.dumps(
+                    {
+                        "method": "POST",
+                        "url": "https://api.example.com/pets",
+                        "body": {"name": "Rex", "status": "available"},
+                    }
+                )
+            )
 
         mock_req.assert_called_once()
         call_kwargs = mock_req.call_args
@@ -55,7 +61,10 @@ class TestHttpClientTool:
         """Should return a clear error on timeout."""
         import httpx
 
-        with patch("qa_council.tools.http_client.httpx.request", side_effect=httpx.TimeoutException("timeout")):
+        with patch(
+            "qa_council.tools.http_client.httpx.request",
+            side_effect=httpx.TimeoutException("timeout"),
+        ):
             result = http_tool._run('{"method": "GET", "url": "https://api.example.com/slow"}')
 
         assert "Error" in result
@@ -65,7 +74,9 @@ class TestHttpClientTool:
         """Should return a clear error on connection failure."""
         import httpx
 
-        with patch("qa_council.tools.http_client.httpx.request", side_effect=httpx.ConnectError("refused")):
+        with patch(
+            "qa_council.tools.http_client.httpx.request", side_effect=httpx.ConnectError("refused")
+        ):
             result = http_tool._run('{"method": "GET", "url": "https://invalid.example.com"}')
 
         assert "Error" in result
@@ -126,7 +137,9 @@ class TestHttpClientTool:
         mock_response.text = "{}"
         mock_response.headers = {}
 
-        with patch("qa_council.tools.http_client.httpx.request", return_value=mock_response) as mock_req:
+        with patch(
+            "qa_council.tools.http_client.httpx.request", return_value=mock_response
+        ) as mock_req:
             http_tool._run('{"url": "https://api.example.com"}')
 
         assert mock_req.call_args.kwargs["method"] == "GET"
@@ -139,11 +152,17 @@ class TestHttpClientTool:
         mock_response.text = "[]"
         mock_response.headers = {}
 
-        with patch("qa_council.tools.http_client.httpx.request", return_value=mock_response) as mock_req:
-            http_tool._run(json.dumps({
-                "method": "GET",
-                "url": "https://api.example.com/search",
-                "params": {"q": "test", "limit": 10},
-            }))
+        with patch(
+            "qa_council.tools.http_client.httpx.request", return_value=mock_response
+        ) as mock_req:
+            http_tool._run(
+                json.dumps(
+                    {
+                        "method": "GET",
+                        "url": "https://api.example.com/search",
+                        "params": {"q": "test", "limit": 10},
+                    }
+                )
+            )
 
         assert mock_req.call_args.kwargs["params"] == {"q": "test", "limit": 10}

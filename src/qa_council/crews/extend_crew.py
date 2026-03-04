@@ -26,7 +26,9 @@ from qa_council.tools.file_writer import FileWriterTool
 from qa_council.tools.test_runner import TestRunnerTool
 
 
-def build_extend_crew(target_url: str, output_dir: str = "./output", llm: str = "gpt-4o-mini") -> Crew:
+def build_extend_crew(
+    target_url: str, output_dir: str = "./output", llm: str = "gpt-4o-mini"
+) -> Crew:
     """Build a crew for EXTEND mode — adding tests to existing coverage.
 
     Same as NEW mode but Scout focuses only on new/changed areas,
@@ -71,9 +73,13 @@ def build_extend_crew(target_url: str, output_dir: str = "./output", llm: str = 
     return Crew(
         agents=[scout, strategist, engineer, critic, reporter],
         tasks=[
-            explore_task, critique_recon, revised_recon,
+            explore_task,
+            critique_recon,
+            revised_recon,
             strategy_task,
-            implement_task, critique_code, fix_task,
+            implement_task,
+            critique_code,
+            fix_task,
             report_task,
         ],
         process=Process.sequential,

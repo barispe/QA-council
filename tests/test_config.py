@@ -1,7 +1,6 @@
 """Tests for the config loader."""
 
 import pytest
-from pathlib import Path
 from types import SimpleNamespace
 
 from qa_council.config import Config, ModelConfig, load_config
@@ -65,7 +64,13 @@ class TestConfig:
 
     def test_merge_cli_args(self):
         config = Config()
-        args = SimpleNamespace(url="https://api.test.com", mode="extend", output="./out", checkpoints="full", model="gpt-4")
+        args = SimpleNamespace(
+            url="https://api.test.com",
+            mode="extend",
+            output="./out",
+            checkpoints="full",
+            model="gpt-4",
+        )
         config.merge_cli_args(args)
         assert config.url == "https://api.test.com"
         assert config.mode == "extend"
@@ -75,7 +80,12 @@ class TestConfig:
 
     def test_apply_preset(self, config_file):
         config = Config.from_yaml(config_file)
-        presets = {"premium": {"default": "claude-sonnet-4-20250514", "per_agent": {"scout": "gpt-4o-mini"}}}
+        presets = {
+            "premium": {
+                "default": "claude-sonnet-4-20250514",
+                "per_agent": {"scout": "gpt-4o-mini"},
+            }
+        }
         config.apply_preset("premium", presets)
         assert config.models.default == "claude-sonnet-4-20250514"
         assert config.models.get_model("scout") == "gpt-4o-mini"
@@ -94,7 +104,14 @@ class TestLoadConfig:
         assert config.checkpoints == "phase"
 
     def test_cli_args_override_config(self, config_file):
-        args = SimpleNamespace(url="https://override.com", mode="maintain", output="./custom", checkpoints="none", model="gpt-4", preset=None)
+        args = SimpleNamespace(
+            url="https://override.com",
+            mode="maintain",
+            output="./custom",
+            checkpoints="none",
+            model="gpt-4",
+            preset=None,
+        )
         config = load_config(config_path=config_file, args=args)
         assert config.url == "https://override.com"
         assert config.mode == "maintain"

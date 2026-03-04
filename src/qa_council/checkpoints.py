@@ -9,10 +9,10 @@ from typing import Optional
 class CheckpointLevel(Enum):
     """Checkpoint verbosity levels."""
 
-    NONE = "none"       # Never pause
-    PHASE = "phase"     # Pause after every major phase
+    NONE = "none"  # Never pause
+    PHASE = "phase"  # Pause after every major phase
     CRITICAL = "critical"  # Pause only at critical decision points
-    FULL = "full"       # Pause after every task
+    FULL = "full"  # Pause after every task
 
     @classmethod
     def from_string(cls, value: str) -> CheckpointLevel:
@@ -27,8 +27,8 @@ class CheckpointLevel(Enum):
 CHECKPOINT_TRIGGERS = {
     CheckpointLevel.NONE: set(),
     CheckpointLevel.CRITICAL: {
-        "after_recon",       # After Scout's initial exploration
-        "after_strategy",    # After test strategy is designed
+        "after_recon",  # After Scout's initial exploration
+        "after_strategy",  # After test strategy is designed
     },
     CheckpointLevel.PHASE: {
         "after_recon",

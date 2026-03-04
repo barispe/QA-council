@@ -1,6 +1,5 @@
 """Tests for the checkpoint system."""
 
-import pytest
 from qa_council.checkpoints import CheckpointManager, CheckpointLevel
 
 

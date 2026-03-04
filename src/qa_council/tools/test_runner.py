@@ -63,7 +63,10 @@ class TestRunnerTool(BaseTool):
 
             # Truncate if too long
             if len(output) > 4000:
-                output = output[:4000] + f"\n\n... [TRUNCATED — full output is {len(result.stdout)} chars]"
+                output = (
+                    output[:4000]
+                    + f"\n\n... [TRUNCATED — full output is {len(result.stdout)} chars]"
+                )
 
             return (
                 f"Exit code: {result.returncode} "

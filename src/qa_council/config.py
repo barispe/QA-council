@@ -77,8 +77,7 @@ class Config:
         """Apply a named model preset from config."""
         if preset_name not in presets:
             raise ValueError(
-                f"Unknown preset '{preset_name}'. "
-                f"Available: {', '.join(presets.keys())}"
+                f"Unknown preset '{preset_name}'. Available: {', '.join(presets.keys())}"
             )
         preset = presets[preset_name]
         self.models.default = preset.get("default", self.models.default)

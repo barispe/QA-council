@@ -1,10 +1,9 @@
 """Tests for SKILL.md loader."""
 
-import tempfile
 import pytest
 from pathlib import Path
 
-from qa_council.skill_loader import load_skill, create_agent_from_skill
+from qa_council.skill_loader import load_skill
 
 
 @pytest.fixture
@@ -103,12 +102,18 @@ class TestLoadActualSkills:
         """Scout SKILL.md should parse without errors."""
         result = load_skill("skills/scout")
         assert result["name"] == "qa-scout"
-        assert "endpoint" in result["description"].lower() or "discover" in result["description"].lower()
+        assert (
+            "endpoint" in result["description"].lower()
+            or "discover" in result["description"].lower()
+        )
         assert len(result["instructions"]) > 100  # should have substantial content
 
     def test_critic_skill_loads(self):
         """Critic SKILL.md should parse without errors."""
         result = load_skill("skills/critic")
         assert result["name"] == "qa-critic"
-        assert "challenge" in result["description"].lower() or "completeness" in result["description"].lower()
+        assert (
+            "challenge" in result["description"].lower()
+            or "completeness" in result["description"].lower()
+        )
         assert len(result["instructions"]) > 100

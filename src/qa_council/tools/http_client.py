@@ -1,7 +1,6 @@
 """HTTP Client tool — allows agents to make HTTP requests to explore APIs."""
 
 import json
-from typing import Any
 
 import httpx
 from crewai.tools import BaseTool
@@ -65,7 +64,10 @@ class HttpClientTool(BaseTool):
             # Truncate very long responses to save token context
             body_text = response.text
             if len(body_text) > 3000:
-                body_text = body_text[:3000] + f"\n\n... [TRUNCATED — full response is {len(response.text)} chars]"
+                body_text = (
+                    body_text[:3000]
+                    + f"\n\n... [TRUNCATED — full response is {len(response.text)} chars]"
+                )
 
             # Format response headers (only interesting ones)
             interesting_headers = {
