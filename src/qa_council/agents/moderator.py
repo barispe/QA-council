@@ -3,7 +3,7 @@
 from qa_council.skill_loader import create_agent_from_skill
 
 
-def create_moderator(llm: str = "gpt-4o-mini"):
+def create_moderator(llm: str = "gpt-4o-mini", base_url: str | None = None):
     """Create a Moderator agent from its SKILL.md definition.
 
     The Moderator sequences phases, routes outputs between agents,
@@ -13,5 +13,6 @@ def create_moderator(llm: str = "gpt-4o-mini"):
     return create_agent_from_skill(
         skill_dir="skills/moderator",
         llm=llm,
+        base_url=base_url,
         allow_delegation=True,
     )

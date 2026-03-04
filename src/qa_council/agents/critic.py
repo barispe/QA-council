@@ -3,7 +3,7 @@
 from qa_council.skill_loader import create_agent_from_skill
 
 
-def create_critic(llm: str = "gpt-4o-mini"):
+def create_critic(llm: str = "gpt-4o-mini", base_url: str | None = None):
     """Create a Critic agent from its SKILL.md definition.
 
     The Critic challenges all outputs for completeness, correctness,
@@ -12,5 +12,6 @@ def create_critic(llm: str = "gpt-4o-mini"):
     return create_agent_from_skill(
         skill_dir="skills/critic",
         llm=llm,
+        base_url=base_url,
         allow_delegation=False,
     )

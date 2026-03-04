@@ -5,6 +5,7 @@ checkpoints: critical # none | phase | critical | full
 
 models:
   default: "gpt-4o-mini"
+  # base_url: ""  # Set for local LLMs (Ollama/LM Studio)
 
   per_agent:
     scout: "gpt-4o-mini"
@@ -15,6 +16,7 @@ models:
     moderator: "gpt-4o-mini"
 
 presets:
+  # Cloud API presets
   budget:
     default: "gpt-4o-mini"
   balanced:
@@ -25,3 +27,17 @@ presets:
       moderator: "gpt-4o-mini"
   premium:
     default: "claude-sonnet-4-20250514"
+
+  # Local model presets (no API key needed!)
+  ollama:
+    default: "ollama/llama3"
+    base_url: "http://localhost:11434"
+  ollama-qwen:
+    default: "ollama/qwen2.5:14b"
+    base_url: "http://localhost:11434"
+  ollama-mistral:
+    default: "ollama/mistral"
+    base_url: "http://localhost:11434"
+  lmstudio:
+    default: "lm_studio/loaded-model"
+    base_url: "http://localhost:1234/v1"

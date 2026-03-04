@@ -84,15 +84,17 @@ cd QA-council
 # Install (Python 3.11+ required)
 pip install -e ".[dev]"
 
-# Set up your API key
-cp .env.example .env
-# Edit .env → set OPENAI_API_KEY=sk-...
-
 # Preview what would happen (no LLM calls)
 qa-council run --url https://petstore.swagger.io/v2 --mode new --dry-run
 
-# Run the full council
+# Run with a cloud API key
+cp .env.example .env
+# Edit .env → set OPENAI_API_KEY=sk-...
 qa-council run --url https://petstore.swagger.io/v2 --mode new
+
+# Or run with a local model (no API key needed!)
+qa-council run --url https://petstore.swagger.io/v2 --preset ollama
+qa-council run --url https://petstore.swagger.io/v2 --preset lmstudio
 ```
 
 ## CLI Reference
@@ -107,10 +109,23 @@ qa-council run --url <URL> --mode extend
 # Quick fix mode — 3 agents only
 qa-council run --url <URL> --mode maintain
 
-# Use a model preset
+# Cloud model presets
 qa-council run --url <URL> --preset budget     # gpt-4o-mini everywhere
 qa-council run --url <URL> --preset balanced   # mix of models
 qa-council run --url <URL> --preset premium    # claude-sonnet-4-20250514 everywhere
+
+# Local model presets (no API key needed!)
+qa-council run --url <URL> --preset ollama         # llama3 via Ollama
+qa-council run --url <URL> --preset ollama-qwen    # qwen2.5:14b via Ollama
+qa-council run --url <URL> --preset ollama-mistral  # mistral via Ollama
+qa-council run --url <URL> --preset lmstudio       # loaded model via LM Studio
+
+# Direct local model (auto-detects Ollama/LM Studio from prefix)
+qa-council run --url <URL> --model ollama/llama3
+qa-council run --url <URL> --model lm_studio/qwen2.5
+
+# Manual base URL for any OpenAI-compatible server
+qa-council run --url <URL> --model my-model --base-url http://localhost:11434
 
 # Custom checkpoint level
 qa-council run --url <URL> --checkpoints phase  # pause after every phase
@@ -118,9 +133,6 @@ qa-council run --url <URL> --checkpoints full   # pause after every task
 
 # Use a custom config file
 qa-council run --url <URL> --config my-config.yaml
-
-# Override model for all agents
-qa-council run --url <URL> --model gpt-4o
 
 # Output to custom directory
 qa-council run --url <URL> --output ./my-output
@@ -135,22 +147,44 @@ checkpoints: critical   # none | phase | critical | full
 
 models:
   default: "gpt-4o-mini"
+  # base_url: ""  # Set for local LLMs (Ollama/LM Studio)
   per_agent:
     critic: "claude-sonnet-4-20250514"  # use a stronger model for the Critic
 
 presets:
-  budget:
-    default: "gpt-4o-mini"
-  balanced:
-    default: "claude-sonnet-4-20250514"
-    per_agent:
-      scout: "gpt-4o-mini"
-      reporter: "gpt-4o-mini"
-  premium:
-    default: "claude-sonnet-4-20250514"
+  # Cloud presets
+  budget:   { default: "gpt-4o-mini" }
+  premium:  { default: "claude-sonnet-4-20250514" }
+
+  # Local model presets
+  ollama:         { default: "ollama/llama3",      base_url: "http://localhost:11434" }
+  ollama-qwen:    { default: "ollama/qwen2.5:14b", base_url: "http://localhost:11434" }
+  ollama-mistral: { default: "ollama/mistral",     base_url: "http://localhost:11434" }
+  lmstudio:       { default: "lm_studio/loaded-model", base_url: "http://localhost:1234/v1" }
 ```
 
 **Priority**: CLI args > config file > built-in defaults.
+
+### Using Local Models (Ollama / LM Studio)
+
+**With Ollama:**
+```bash
+# 1. Install Ollama → https://ollama.com
+# 2. Pull a model
+ollama pull llama3
+# 3. Run QA-Council
+qa-council run --url https://petstore.swagger.io/v2 --preset ollama
+```
+
+**With LM Studio:**
+```bash
+# 1. Install LM Studio → https://lmstudio.ai
+# 2. Download a model and start the local server (port 1234)
+# 3. Run QA-Council
+qa-council run --url https://petstore.swagger.io/v2 --preset lmstudio
+```
+
+**Auto-detection:** Model prefixes like `ollama/` and `lm_studio/` automatically set the correct base URL — no extra config needed.
 
 ## Project Structure
 
@@ -221,7 +255,9 @@ ruff format src/ tests/
 ## Requirements
 
 - **Python 3.11+**
-- **An LLM API key** — set `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` in `.env`
+- **An LLM** — either:
+  - A cloud API key (`OPENAI_API_KEY` or `ANTHROPIC_API_KEY` in `.env`), or
+  - A local model via [Ollama](https://ollama.com) or [LM Studio](https://lmstudio.ai) (free!)
 
 ## How It Works
 

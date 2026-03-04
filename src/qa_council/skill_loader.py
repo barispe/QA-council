@@ -55,6 +55,7 @@ def load_skill(skill_dir: str | Path) -> dict:
 def create_agent_from_skill(
     skill_dir: str | Path,
     llm: str = "gpt-4o-mini",
+    base_url: str | None = None,
     tools: list | None = None,
     **kwargs,
 ) -> Agent:
@@ -67,7 +68,8 @@ def create_agent_from_skill(
 
     Args:
         skill_dir: Path to skill directory containing SKILL.md.
-        llm: LLM model string (e.g. 'gpt-4o-mini', 'claude-sonnet-4-20250514').
+        llm: LLM model string (e.g. 'gpt-4o-mini', 'ollama/llama3', 'lm_studio/qwen2.5').
+        base_url: Optional base URL for local LLM servers (e.g. 'http://localhost:11434').
         tools: List of CrewAI tools this agent can use.
         **kwargs: Additional CrewAI Agent parameters (e.g. allow_delegation, allow_code_execution).
 
@@ -75,12 +77,45 @@ def create_agent_from_skill(
         A configured CrewAI Agent instance.
     """
     skill = load_skill(skill_dir)
+
+    # Build LLM config — use LLM object for local models, string for cloud APIs
+    llm_config = _build_llm_config(llm, base_url)
+
     return Agent(
         role=skill["name"],
         goal=skill["description"],
         backstory=skill["instructions"],
-        llm=llm,
+        llm=llm_config,
         tools=tools or [],
         verbose=True,
         **kwargs,
     )
+
+
+def _build_llm_config(model: str, base_url: str | None = None):
+    """Build the LLM configuration for CrewAI.
+
+    For cloud APIs (OpenAI, Anthropic), returns the model string directly.
+    For local LLMs (Ollama, LM Studio), creates a CrewAI LLM object with base_url.
+
+    Args:
+        model: Model identifier (e.g. 'gpt-4o-mini', 'ollama/llama3').
+        base_url: Optional base URL for local servers.
+
+    Returns:
+        Either a model string or a configured LLM object.
+    """
+    from crewai import LLM
+
+    # If a base_url is provided, always use LLM object
+    if base_url:
+        return LLM(model=model, base_url=base_url)
+
+    # Auto-detect local model prefixes and set default base URLs
+    if model.startswith("ollama/"):
+        return LLM(model=model, base_url="http://localhost:11434")
+    if model.startswith("lm_studio/"):
+        return LLM(model=model, base_url="http://localhost:1234/v1")
+
+    # Cloud API — return plain string
+    return model

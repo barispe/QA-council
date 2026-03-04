@@ -20,7 +20,10 @@ from qa_council.tools.test_runner import TestRunnerTool
 
 
 def build_maintain_crew(
-    target_url: str, output_dir: str = "./output", llm: str = "gpt-4o-mini"
+    target_url: str,
+    output_dir: str = "./output",
+    llm: str = "gpt-4o-mini",
+    base_url: str | None = None,
 ) -> Crew:
     """Build a crew for MAINTAIN mode — fixing and updating existing tests.
 
@@ -31,6 +34,7 @@ def build_maintain_crew(
         target_url: The API URL to explore changed areas.
         output_dir: Directory for generated files.
         llm: LLM model string.
+        base_url: Optional base URL for local LLM server.
 
     Returns:
         A configured Crew ready to kickoff().
@@ -39,9 +43,9 @@ def build_maintain_crew(
     file_tool = FileWriterTool(output_dir=output_dir)
     test_tool = TestRunnerTool(output_dir=output_dir)
 
-    scout = create_scout(llm=llm, tools=[http_tool])
-    engineer = create_engineer(llm=llm, tools=[file_tool, test_tool, http_tool])
-    critic = create_critic(llm=llm)
+    scout = create_scout(llm=llm, base_url=base_url, tools=[http_tool])
+    engineer = create_engineer(llm=llm, base_url=base_url, tools=[file_tool, test_tool, http_tool])
+    critic = create_critic(llm=llm, base_url=base_url)
 
     # Quick recon — focus on changed areas
     explore_task = create_explore_task(scout, target_url)

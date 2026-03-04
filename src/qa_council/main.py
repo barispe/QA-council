@@ -31,8 +31,7 @@ def main():
     run_parser.add_argument("--output", default="./output", help="Output directory")
     run_parser.add_argument(
         "--preset",
-        choices=["budget", "balanced", "premium"],
-        help="Model preset to use",
+        help="Model preset (budget, balanced, premium, ollama, ollama-qwen, lmstudio, etc.)",
     )
     run_parser.add_argument(
         "--checkpoints",
@@ -43,6 +42,11 @@ def main():
     run_parser.add_argument("--config", help="Path to config YAML file")
     run_parser.add_argument("--dry-run", action="store_true", help="Preview without LLM calls")
     run_parser.add_argument("--model", default=None, help="LLM model override for all agents")
+    run_parser.add_argument(
+        "--base-url",
+        default=None,
+        help="Base URL for local LLM server (e.g. http://localhost:11434 for Ollama)",
+    )
 
     args = parser.parse_args()
 
@@ -75,6 +79,8 @@ def _dry_run(args):
     print(f"   Output: {config.output}")
     print(f"   Checkpoints: {config.checkpoints}")
     print(f"   Model (default): {config.models.default}")
+    if config.models.base_url:
+        print(f"   Base URL: {config.models.base_url}")
 
     # Show per-agent models if any differ from default
     overrides = {k: v for k, v in config.models.per_agent.items() if v != config.models.default}
@@ -94,6 +100,8 @@ def _run(args):
     print(f"\n🚀 QA-Council — Mode: {config.mode.upper()}")
     print(f"   Target: {config.url}")
     print(f"   Model:  {config.models.default}")
+    if config.models.base_url:
+        print(f"   Base URL: {config.models.base_url}")
     print(f"   Output: {config.output}")
     print(f"   Checkpoints: {config.checkpoints}")
     print("=" * 60)
@@ -114,6 +122,7 @@ def _run_full_council(config):
         target_url=config.url,
         output_dir=config.output,
         llm=config.models.default,
+        base_url=config.models.base_url or None,
     )
     print("\n🏛️  Full council is in session (6 agents, 9 tasks)...\n")
     result = crew.kickoff()
@@ -128,6 +137,7 @@ def _run_extend(config):
         target_url=config.url,
         output_dir=config.output,
         llm=config.models.default,
+        base_url=config.models.base_url or None,
     )
     print("\n📦 Extend mode — adding tests to existing coverage...\n")
     result = crew.kickoff()
@@ -142,6 +152,7 @@ def _run_maintain(config):
         target_url=config.url,
         output_dir=config.output,
         llm=config.models.default,
+        base_url=config.models.base_url or None,
     )
     print("\n🔧 Maintain mode — fixing and updating tests...\n")
     result = crew.kickoff()

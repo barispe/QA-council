@@ -29,7 +29,12 @@ from qa_council.tools.file_writer import FileWriterTool
 from qa_council.tools.test_runner import TestRunnerTool
 
 
-def build_new_crew(target_url: str, output_dir: str = "./output", llm: str = "gpt-4o-mini") -> Crew:
+def build_new_crew(
+    target_url: str,
+    output_dir: str = "./output",
+    llm: str = "gpt-4o-mini",
+    base_url: str | None = None,
+) -> Crew:
     """Build the full 6-agent council crew for NEW mode.
 
     This is the complete pipeline:
@@ -47,6 +52,7 @@ def build_new_crew(target_url: str, output_dir: str = "./output", llm: str = "gp
         target_url: The API URL to explore and test.
         output_dir: Directory for generated test files and reports.
         llm: LLM model string for all agents.
+        base_url: Optional base URL for local LLM server.
 
     Returns:
         A configured Crew ready to kickoff().
@@ -58,12 +64,12 @@ def build_new_crew(target_url: str, output_dir: str = "./output", llm: str = "gp
     test_tool = TestRunnerTool(output_dir=output_dir)
 
     # Create agents from SKILL.md files
-    scout = create_scout(llm=llm, tools=[http_tool, spec_tool])
-    strategist = create_strategist(llm=llm)
-    engineer = create_engineer(llm=llm, tools=[file_tool, test_tool, http_tool])
-    critic = create_critic(llm=llm)
-    reporter = create_reporter(llm=llm)
-    moderator = create_moderator(llm=llm)
+    scout = create_scout(llm=llm, base_url=base_url, tools=[http_tool, spec_tool])
+    strategist = create_strategist(llm=llm, base_url=base_url)
+    engineer = create_engineer(llm=llm, base_url=base_url, tools=[file_tool, test_tool, http_tool])
+    critic = create_critic(llm=llm, base_url=base_url)
+    reporter = create_reporter(llm=llm, base_url=base_url)
+    moderator = create_moderator(llm=llm, base_url=base_url)
 
     # Phase 1: Reconnaissance (Scout explores → Critic challenges → Scout revises)
     explore_task = create_explore_task(scout, target_url)

@@ -20,6 +20,7 @@ class ModelConfig:
     """Model configuration — which LLM each agent uses."""
 
     default: str = "gpt-4o-mini"
+    base_url: str = ""  # For local LLMs (Ollama, LM Studio)
     per_agent: dict[str, str] = field(default_factory=dict)
 
     def get_model(self, agent_name: str) -> str:
@@ -63,6 +64,7 @@ class Config:
         models_raw = raw.get("models", {})
         models = ModelConfig(
             default=models_raw.get("default", "gpt-4o-mini"),
+            base_url=models_raw.get("base_url", ""),
             per_agent=models_raw.get("per_agent", {}),
         )
         return cls(
@@ -81,6 +83,8 @@ class Config:
             )
         preset = presets[preset_name]
         self.models.default = preset.get("default", self.models.default)
+        if "base_url" in preset:
+            self.models.base_url = preset["base_url"]
         if "per_agent" in preset:
             self.models.per_agent.update(preset["per_agent"])
 
@@ -96,6 +100,8 @@ class Config:
             self.checkpoints = args.checkpoints
         if hasattr(args, "model") and args.model:
             self.models.default = args.model
+        if hasattr(args, "base_url") and args.base_url:
+            self.models.base_url = args.base_url
 
 
 def load_config(config_path: Optional[str] = None, args=None) -> Config:
